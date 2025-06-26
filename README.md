@@ -1,20 +1,21 @@
 # OExec
-Just another way of kexec for ARM(Mainly Android) devices.
+Just another UI way of kexec for ARM(Mainly Android) devices.
 
 # Features
+* TUI
 * Create boot items, save and load them
 
 ## WIP
 * Scanning for boot partitions
-* Extracting boot.img files and using them. (Couldn't get it working on my device, lmk if you can do this.)
+* Extracting boot.img files and using them. (Couldn't get it working on my device, let me know if you can do this.)
 
 # How to use?
 > [!IMPORTANT]  
-> This was only tested in postmarketOS.
-
-> [!WARNING]  
+> This was only tested in postmarketOS and armv7 architecture.
+> 
 > This is currently a "Works on my device" project.
 
+* Install `kexec-tools` and optionally `unpackbootimg`
 * Cd to the directory that OExec is in.
 * run `python OExec.py`
 * The app will explain stuff.
