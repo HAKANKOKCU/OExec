@@ -173,9 +173,9 @@ def boot(kernel, ramdiskType, ramdisk, dtb, bootargsAppend):
     global deviceName
     config = configparser.ConfigParser()
     config.read("./DeviceSpecific/" + deviceName + ".ini") # getDevice already checks if this exists.
-    bootargs = config["bootargs"]["staticbootargs"] + " " # Add space to end as dynamic/appends will be put after this.
+    bootargs = config["commandline"]["staticbootargs"] + " " # Add space to end as dynamic/appends will be put after this.
     
-    dynamicbootargs = config["bootargs"]["dynamicbootargs"].split(" ")
+    dynamicbootargs = config["commandline"]["dynamicbootargs"].split(" ")
     # We read /proc/cmdline to get the "dynamic" ones that can change.
     pcmdline = open("/proc/cmdline") 
     cmdline = pcmdline.read()[:-1] # have to remove newline...
@@ -188,15 +188,26 @@ def boot(kernel, ramdiskType, ramdisk, dtb, bootargsAppend):
             bootargs += dba.replace("\n","") + " " # add as argument.
     # Add appends
     bootargs += bootargsAppend
-    kexeccmd = ("-d", "-l", kernel, "--dtb=%s" % dtb, "--command-line=%s" % ("'" + bootargs.replace("\\","\\\\") + "'"))
+    kexeccmd = ("-d", "-l", kernel, "--dtb=%s" % dtb)
     if ramdiskType == "initrd":
-        kexeccmd += ("--initrd=%s" % ramdisk, "-f")
+        kexeccmd += ("--initrd=%s" % ramdisk,)
     elif ramdiskType == "ramdisk":
-        kexeccmd += ("--ramdisk=%s" % ramdisk, "-f")
-    # Force the kexec because it would cause problems on some devices.
-    print(kexeccmd)
+        kexeccmd += ("--ramdisk=%s" % ramdisk,)
+    
+    if (config["boot"]["bootmode"] == "forceBeforeArguments"):
+        kexeccmd += ("-f",) # Force the kexec because it would cause problems on some devices.
+    
+    bootargs = bootargs.replace("\\","\\\\")
+    if (config["commandline"]["cmdmode"] == "append"):
+        kexeccmd += ("--append=%s" % bootargs,)
+    elif (config["commandline"]["cmdmode"] == "cmdline"):
+        kexeccmd += ("--command-line=%s" % bootargs,)
+    
+    print(kexeccmd) # Print for debug
     # Execute
-    subprocess.call(("sudo", "kexec") + kexeccmd)
+    r = subprocess.call(("sudo", "kexec") + kexeccmd)
+    if (r == 0 and config["boot"]["bootmode"] == "normal"):
+        subprocess.call(("sudo", "kexec", "-e"))
     # If it didn't fail, this wouldn't have a way to exit back. So, ignoring.
 
 # Start
